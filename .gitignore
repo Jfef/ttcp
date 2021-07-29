@@ -10,3 +10,7 @@
 *.lai
 *.la
 *.a
+.vscode/c_cpp_properties.json
+.gitignore
+.vscode/launch.json
+.vscode/settings.json
