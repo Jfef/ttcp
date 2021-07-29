@@ -514,15 +514,15 @@ char **argv;
 		else
 		{
 			while ((cnt = Nread(fd, buf, buflen)) > 0 &&
-				   write(1, buf, cnt) == cnt)
+				   write(1, buf, cnt) == cnt) //标准输出
 				nbytes += cnt;
 		}
 	}
 
 	if (errno)
 		err("IO");
-	(void)read_timer(stats, sizeof(stats));
-	if (udp && trans)
+	(void)read_timer(stats, sizeof(stats)); // 结束时间设置
+	if (udp && trans)  // 使用UDP 的方式发送
 	{
 		(void)Nwrite(fd, buf, 4); /* rcvr end */
 		(void)Nwrite(fd, buf, 4); /* rcvr end */
@@ -640,10 +640,13 @@ register struct rusage *ru;
 	times(&buf);
 
 	/* Assumption: HZ <= 2147 (LONG_MAX/1000000) */
-	ru->ru_stime.tv_sec = buf.tms_stime / HZ;
-	ru->ru_stime.tv_usec = ((buf.tms_stime % HZ) * 1000000) / HZ;
-	ru->ru_utime.tv_sec = buf.tms_utime / HZ;
+
+	ru->ru_stime.tv_sec = buf.tms_stime / HZ;// tms_stime 表示 CPU 时间，在核心态中花费的时间
+	ru->ru_stime.tv_usec = ((buf.tms_stime % HZ) * 1000000) / HZ; 
+
+	ru->ru_utime.tv_sec = buf.tms_utime / HZ; // tms_stime 表示CPU 时间，在的用户态花费的时间
 	ru->ru_utime.tv_usec = ((buf.tms_utime % HZ) * 1000000) / HZ;
+	// https://blog.csdn.net/weixin_37921201/article/details/90047811
 }
 
 /*ARGSUSED*/
@@ -660,8 +663,8 @@ struct timezone *zp;
  */
 void prep_timer()
 {
-	gettimeofday(&time0, (struct timezone *)0);
-	getrusage(RUSAGE_SELF, &ru0);
+	gettimeofday(&time0, (struct timezone *)0);   // 设置time0
+	getrusage(RUSAGE_SELF, &ru0);                 // CPU 用户态和核心态花费的时间点
 }
 
 /*
@@ -677,20 +680,24 @@ double
 	struct timeval tend, tstart;
 	char line[132];
 
-	getrusage(RUSAGE_SELF, &ru1);
-	gettimeofday(&timedol, (struct timezone *)0);
-	prusage(&ru0, &ru1, &timedol, &time0, line);
-	(void)strncpy(str, line, len);
+	getrusage(RUSAGE_SELF, &ru1);  // 获取到时间电动
+	gettimeofday(&timedol, (struct timezone *)0); // 获取第二个时间点
+
+	prusage(&ru0, &ru1, &timedol, &time0, line);  //  输出时间
+
+	(void)strncpy(str, line, len);   
 
 	/* Get real time */
-	tvsub(&td, &timedol, &time0);
+	tvsub(&td, &timedol, &time0);   // 两个时间点相减得到延迟
 	realt = td.tv_sec + ((double)td.tv_usec) / 1000000;
 
 	/* Get CPU time (user+sys) */
 	tvadd(&tend, &ru1.ru_utime, &ru1.ru_stime);
 	tvadd(&tstart, &ru0.ru_utime, &ru0.ru_stime);
 	tvsub(&td, &tend, &tstart);
+
 	cput = td.tv_sec + ((double)td.tv_usec) / 1000000;
+
 	if (cput < 0.00001)
 		cput = 0.00001;
 	return (cput);
