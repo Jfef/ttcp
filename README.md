@@ -67,3 +67,10 @@ ttcp-t: 122330 I/O calls, msec/call = 0.15, calls/sec = 7016.56
 ttcp-t: 0.0user 0.3sys 0:17real 2% 0i+0d 1518maxrss 0+2pf 1739+81146csw
 ```
 
+说明:
+
+这里的 TTCP 测试的，与陈硕 传输设计的方式是不同的。
+
+![image-20210728103006492](https://i.loli.net/2021/07/28/AJbszq2OfF8yB3i.png)
+
+这里ack 的阶段处理。是不存在的。
